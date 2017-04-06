@@ -41,10 +41,12 @@ class CodeReview extends Notification
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)->markdown(
-            'mail.code_reviews',
-            ['reviewers' => $this->reviewers]
-        );
+        return (new MailMessage)
+            ->subject('First 5 Minutes of Scrum')
+            ->markdown(
+                'mail.code_reviews',
+                ['reviewers' => $this->reviewers]
+            );
     }
 
     /**

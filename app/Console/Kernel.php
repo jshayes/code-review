@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        \App\Console\Commands\CodeReviewReport::class,
     ];
 
     /**
@@ -24,8 +24,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        $schedule->command('code-review:send-report')
+            ->weekdays()
+            ->timezone('America/Toronto')
+            ->dailyAt('09:30');
     }
 
     /**

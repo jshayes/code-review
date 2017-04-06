@@ -8,5 +8,4 @@
 @endforeach
 
 @endforeach
-
 @endcomponent
