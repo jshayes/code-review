@@ -1,4 +1,5 @@
 @component('mail::message')
+@if(!empty($reviews))
 # Das Code Review Report
 
 @foreach($reviews as $review)
@@ -8,4 +9,7 @@
 @endforeach
 
 @endforeach
+@else
+Looks like there is nothing assigned for code review today.
+@endif
 @endcomponent
