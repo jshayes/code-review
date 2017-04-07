@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Collection;
 use Illuminate\Notifications\Notification;
@@ -42,7 +43,7 @@ class CodeReview extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('First 5 Minutes of Scrum')
+            ->subject(sprintf('First 5 Minutes of Scrum for %s', Carbon::now('America/Toronto')->format('l')))
             ->markdown(
                 'mail.code_reviews',
                 ['reviews' => $this->reviews]
