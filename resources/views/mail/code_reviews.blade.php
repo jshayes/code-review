@@ -1,7 +1,5 @@
 @component('mail::message')
 @if(!empty($reviews))
-# Das Code Review Report
-
 @foreach($reviews as $review)
 ### Code reviews assigned to {{ $review['name'] }}
 @foreach($review['pull_requests'] as $pullRequest)
