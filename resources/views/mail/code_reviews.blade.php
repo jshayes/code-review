@@ -1,10 +1,10 @@
 @component('mail::message')
 # Daily Code Review Report
 
-@foreach($reviewers as $reviewer => $pullRequests)
-### Code reviews assigned to {{ $reviewer }}
-@foreach($pullRequests as $pullRequest)
-- **{{ $pullRequest['user']['login'] }}** assigned [{{ $pullRequest['title'] }}]({{ $pullRequest['html_url'] }})
+@foreach($reviews as $review)
+### Code reviews assigned to {{ $review['name'] }}
+@foreach($review['pull_requests'] as $pullRequest)
+- **{{ $pullRequest['user']['name'] }}** assigned [{{ $pullRequest['title'] }}]({{ $pullRequest['html_url'] }})
 @endforeach
 
 @endforeach

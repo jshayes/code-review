@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\User;
 use Carbon\Carbon;
 use Github\Client;
+use App\GithubUser;
 use Github\ResultPager;
 use Illuminate\Console\Command;
 use App\Notifications\CodeReview;
@@ -26,6 +27,8 @@ class CodeReviewReport extends Command
      */
     protected $description = 'Sends the daily code review report.';
 
+    private $names = [];
+
     /**
      * Create a new command instance.
      *
@@ -34,6 +37,19 @@ class CodeReviewReport extends Command
     public function __construct()
     {
         parent::__construct();
+    }
+
+    private function convertToName($login)
+    {
+        if (!array_key_exists($login, $this->names)) {
+            $client = new Client();
+            $client->authenticate(env('GITHUB_TOKEN'), Client::AUTH_HTTP_TOKEN);
+            $user = $client->api('user')->show($login);
+
+            $this->names[$login] = $user['name'];
+        }
+
+        return $this->names[$login];
     }
 
     /**
@@ -54,7 +70,7 @@ class CodeReviewReport extends Command
             return $time->lte(Carbon::parse($repository['pushed_at']));
         });
 
-        $reviewers = new Collection();
+        $reviews = new Collection();
 
         foreach ($repositories as $repository) {
             $pullRequests = $pager->fetchAll(
@@ -79,17 +95,30 @@ class CodeReviewReport extends Command
                 );
 
                 foreach ($requestedReviewers as $requestedReviewer) {
-                    if (!$reviewers->has($requestedReviewer['login'])) {
-                        $reviewers->put($requestedReviewer['login'], new Collection());
+                    if (!$reviews->has($requestedReviewer['login'])) {
+                        $reviews->put(
+                            $requestedReviewer['login'],
+                            [
+                                'name' => $this->convertToName($requestedReviewer['login']),
+                                'pull_requests' => new Collection()
+                            ]
+                        );
                     }
 
-                    $reviewers->get($requestedReviewer['login'])->push($pullRequest);
+                    $pullRequest['user']['name'] = $this->convertToName($pullRequest['user']['login']);
+                    $reviews->get($requestedReviewer['login'])['pull_requests']->push($pullRequest);
                 }
             }
         }
 
+        $reviews = $reviews->map(function ($review) {
+            $review['pull_requests'] = $review['pull_requests']->sortBy('user.name');
+
+            return $review;
+        });
+
         $user = new User();
         $user->email = env('REPORT_EMAIL');
-        $user->notify(new CodeReview($reviewers));
+        $user->notify(new CodeReview($reviews));
     }
 }

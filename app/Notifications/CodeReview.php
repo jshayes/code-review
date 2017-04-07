@@ -17,9 +17,9 @@ class CodeReview extends Notification
      *
      * @return void
      */
-    public function __construct(Collection $reviewers)
+    public function __construct(Collection $reviews)
     {
-        $this->reviewers = $reviewers;
+        $this->reviews = $reviews;
     }
 
     /**
@@ -45,7 +45,7 @@ class CodeReview extends Notification
             ->subject('First 5 Minutes of Scrum')
             ->markdown(
                 'mail.code_reviews',
-                ['reviewers' => $this->reviewers]
+                ['reviews' => $this->reviews]
             );
     }
 
