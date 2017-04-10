@@ -46,7 +46,7 @@ class CodeReviewReport extends Command
             $client->authenticate(env('GITHUB_TOKEN'), Client::AUTH_HTTP_TOKEN);
             $user = $client->api('user')->show($login);
 
-            $this->names[$login] = $user['name'];
+            $this->names[$login] = $user['name'] ?: $login;
         }
 
         return $this->names[$login];
