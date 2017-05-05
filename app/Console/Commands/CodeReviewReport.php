@@ -65,7 +65,7 @@ class CodeReviewReport extends Command
         $pager = new ResultPager($client);
 
         $repositories = (new Collection(
-            $pager->fetchAll($client->api('repo'), 'org', ['SoapBox', ['type' => 'private']])
+            $pager->fetchAll($client->api('repo'), 'org', ['SoapBox'])
         ))->filter(function ($repository) use ($time) {
             return $time->lte(Carbon::parse($repository['pushed_at']));
         });
