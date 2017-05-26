@@ -27,7 +27,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('code-review:send-report')
             ->weekdays()
             ->timezone('America/Toronto')
-            ->dailyAt('09:30');
+            ->dailyAt('08:30');
     }
 
     /**
