@@ -1,9 +1,9 @@
 @component('mail::message')
-@if(!empty($reviews))
-@foreach($reviews as $review)
-### Code reviews assigned to {{ $review['name'] }}
+@if(!empty($data['requested_reviews']))
+@foreach($data['requested_reviews'] as $review)
+### Code reviews assigned to {{ $review['reviewer_name'] }}
 @foreach($review['pull_requests'] as $pullRequest)
-- **{{ $pullRequest['user']['name'] }}** assigned [{{ $pullRequest['title'] }}]({{ $pullRequest['html_url'] }}) on {{ $pullRequest['head']['repo']['name'] }}
+- **{{ $pullRequest['author_name'] }}** assigned [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }}
 @endforeach
 
 @endforeach
