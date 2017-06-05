@@ -45,7 +45,7 @@ class CodeReview extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject(sprintf('First 5 Minutes of Scrum for %s', Carbon::now('America/Toronto')->format('l')))
+            ->subject(sprintf('Code Review Report for %s', Carbon::now('America/Toronto')->format('l')))
             ->markdown(
                 'mail.code_reviews',
                 ['data' => $this->data]

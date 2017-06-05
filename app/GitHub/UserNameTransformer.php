@@ -6,9 +6,10 @@ use Illuminate\Support\Collection;
 
 class UserNameTransformer
 {
+    private static $instance;
     private $names;
 
-    public function __construct()
+    private function __construct()
     {
         $this->names = new Collection();
     }
@@ -25,5 +26,14 @@ class UserNameTransformer
         }
 
         return $this->names->get($login);
+    }
+
+    public static function getInstance()
+    {
+        if (is_null(self::$instance)) {
+            self::$instance = new UserNameTransformer();
+        }
+
+        return self::$instance;
     }
 }

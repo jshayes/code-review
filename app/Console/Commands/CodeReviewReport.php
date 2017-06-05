@@ -61,6 +61,7 @@ class CodeReviewReport extends Command
     public function handle()
     {
         $time = Carbon::now()->subMonth(2)->startOfDay();
+        $lastRanAt = Carbon::now()->previousWeekday();
         $client = new Client();
         $pager = new ResultPager($client);
 
@@ -69,12 +70,24 @@ class CodeReviewReport extends Command
 
         $organization->getRepositories()->filter(function ($repository) use ($time) {
             return $time->lte($repository->getPushedAt());
-        })->each(function ($repository) use ($report) {
+        })->each(function ($repository) use ($report, $lastRanAt) {
             $repository->getOpenPullRequests()
-                ->each(function ($pullRequest) use ($report) {
-                    $pullRequest->getRequestedReviews()->each(function ($requestedReviews) use ($report) {
-                        $report->addRequestedReview($requestedReviews);
-                    });
+                ->each(function ($pullRequest) use ($report, $lastRanAt) {
+                    $requestedReviews = $pullRequest->getRequestedReviews();
+
+                    if (!$requestedReviews->isEmpty()) {
+                        $requestedReviews->each(function ($requestedReviews) use ($report) {
+                            $report->addRequestedReview($requestedReviews);
+                        });
+                    } else if ($lastRanAt->lte($pullRequest->getUpdatedAt())) {
+                        $latestReview = $pullRequest->getReviews()->filter(function ($review) use ($lastRanAt) {
+                            return $lastRanAt->lte($review->getSubmittedAt()) && $review->getState() != 'PENDING';
+                        })->last();
+
+                        if (!is_null($latestReview)) {
+                            $report->addReview($latestReview);
+                        }
+                    }
                 });
         });
 

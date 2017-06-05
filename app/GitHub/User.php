@@ -15,4 +15,9 @@ class User
     {
         return $this->data['login'];
     }
+
+    public function getName(): string
+    {
+        return UserNameTransformer::getInstance()->getUserName($this);
+    }
 }

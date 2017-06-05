@@ -2,6 +2,7 @@
 
 namespace App\GitHub;
 
+use Carbon\Carbon;
 use Github\ResultPager;
 use Illuminate\Support\Collection;
 
@@ -41,6 +42,11 @@ class PullRequest
         return $this->data['html_url'];
     }
 
+    public function getUpdatedAt(): Carbon
+    {
+        return Carbon::parse($this->data['updated_at']);
+    }
+
     public function getRequestedReviews(): Collection
     {
         $reviewers = [];
@@ -62,6 +68,25 @@ class PullRequest
 
         return (new Collection($reviewers))->map(function ($user) {
             return new RequestedReview($this, new User($user));
+        });
+    }
+
+    public function getReviews(): Collection
+    {
+        $client = new Client();
+        $pager = new ResultPager($client);
+        return (new Collection(
+            $pager->fetchAll(
+                $client->api('pull_request')->reviews()->configure(),
+                'all',
+                [
+                    $this->repository->getOrganization()->getName(),
+                    $this->repository->getName(),
+                    $this->getNumber(),
+                ]
+            )
+        ))->map(function ($review) {
+            return new Review($this, $review);
         });
     }
 }
