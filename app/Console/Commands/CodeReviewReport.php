@@ -3,10 +3,12 @@
 namespace App\Console\Commands;
 
 use App\User;
+use App\Report;
 use Carbon\Carbon;
-use Github\Client;
 use App\GithubUser;
+use App\GitHub\Client;
 use Github\ResultPager;
+use App\GitHub\Organization;
 use Illuminate\Console\Command;
 use App\Notifications\CodeReview;
 use Illuminate\Support\Collection;
@@ -43,7 +45,6 @@ class CodeReviewReport extends Command
     {
         if (!array_key_exists($login, $this->names)) {
             $client = new Client();
-            $client->authenticate(env('GITHUB_TOKEN'), Client::AUTH_HTTP_TOKEN);
             $user = $client->api('user')->show($login);
 
             $this->names[$login] = $user['name'] ?: $login;
@@ -60,65 +61,38 @@ class CodeReviewReport extends Command
     public function handle()
     {
         $time = Carbon::now()->subMonth(2)->startOfDay();
+        $lastRanAt = Carbon::now()->previousWeekday();
         $client = new Client();
-        $client->authenticate(env('GITHUB_TOKEN'), Client::AUTH_HTTP_TOKEN);
         $pager = new ResultPager($client);
 
-        $repositories = (new Collection(
-            $pager->fetchAll($client->api('repo'), 'org', ['SoapBox'])
-        ))->filter(function ($repository) use ($time) {
-            return $time->lte(Carbon::parse($repository['pushed_at']));
-        });
+        $report = new Report();
+        $organization = new Organization('SoapBox');
 
-        $reviews = new Collection();
+        $organization->getRepositories()->filter(function ($repository) use ($time) {
+            return $time->lte($repository->getPushedAt());
+        })->each(function ($repository) use ($report, $lastRanAt) {
+            $repository->getOpenPullRequests()
+                ->each(function ($pullRequest) use ($report, $lastRanAt) {
+                    $requestedReviews = $pullRequest->getRequestedReviews();
 
-        foreach ($repositories as $repository) {
-            $pullRequests = $pager->fetchAll(
-                $client->api('pull_request'),
-                'all',
-                [
-                    'SoapBox',
-                    $repository['name'],
-                    ['state' => 'open'],
-                ]
-            );
+                    if (!$requestedReviews->isEmpty()) {
+                        $requestedReviews->each(function ($requestedReviews) use ($report) {
+                            $report->addRequestedReview($requestedReviews);
+                        });
+                    } else if ($lastRanAt->lte($pullRequest->getUpdatedAt())) {
+                        $latestReview = $pullRequest->getReviews()->filter(function ($review) use ($lastRanAt) {
+                            return $lastRanAt->lte($review->getSubmittedAt()) && $review->getState() != 'PENDING';
+                        })->last();
 
-            foreach ($pullRequests as $pullRequest) {
-                $requestedReviewers = $pager->fetchAll(
-                    $client->api('pull_request')->reviewRequests()->configure(),
-                    'all',
-                    [
-                        'SoapBox',
-                        $repository['name'],
-                        $pullRequest['number'],
-                    ]
-                );
-
-                foreach ($requestedReviewers as $requestedReviewer) {
-                    if (!$reviews->has($requestedReviewer['login'])) {
-                        $reviews->put(
-                            $requestedReviewer['login'],
-                            [
-                                'name' => $this->convertToName($requestedReviewer['login']),
-                                'pull_requests' => new Collection()
-                            ]
-                        );
+                        if (!is_null($latestReview)) {
+                            $report->addReview($latestReview);
+                        }
                     }
-
-                    $pullRequest['user']['name'] = $this->convertToName($pullRequest['user']['login']);
-                    $reviews->get($requestedReviewer['login'])['pull_requests']->push($pullRequest);
-                }
-            }
-        }
-
-        $reviews = $reviews->map(function ($review) {
-            $review['pull_requests'] = $review['pull_requests']->sortBy('user.name');
-
-            return $review;
+                });
         });
 
         $user = new User();
         $user->email = env('REPORT_EMAIL');
-        $user->notify(new CodeReview($reviews));
+        $user->notify(new CodeReview($report));
     }
 }

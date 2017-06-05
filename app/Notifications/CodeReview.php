@@ -2,9 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Report;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Collection;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -13,14 +13,16 @@ class CodeReview extends Notification
 {
     use Queueable;
 
+    private $data;
+
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct(Collection $reviews)
+    public function __construct(Report $report)
     {
-        $this->reviews = $reviews;
+        $this->data = $report->toArray();
     }
 
     /**
@@ -43,10 +45,10 @@ class CodeReview extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject(sprintf('First 5 Minutes of Scrum for %s', Carbon::now('America/Toronto')->format('l')))
+            ->subject(sprintf('Code Review Report for %s', Carbon::now('America/Toronto')->format('l')))
             ->markdown(
                 'mail.code_reviews',
-                ['reviews' => $this->reviews]
+                ['data' => $this->data]
             );
     }
 
