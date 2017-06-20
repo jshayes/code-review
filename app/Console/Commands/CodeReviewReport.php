@@ -81,7 +81,7 @@ class CodeReviewReport extends Command
                         });
                     } else if ($lastRanAt->lte($pullRequest->getUpdatedAt())) {
                         $latestReview = $pullRequest->getReviews()->filter(function ($review) use ($lastRanAt) {
-                            return $lastRanAt->lte($review->getSubmittedAt()) && $review->getState() != 'PENDING';
+                            return $lastRanAt->lte($review->getSubmittedAt()) && !in_array($review->getState(), ['PENDING', 'COMMENT']);
                         })->last();
 
                         if (!is_null($latestReview)) {
