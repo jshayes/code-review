@@ -1,0 +1,40 @@
+query($after:DateTime){
+  rateLimit {
+    cost,
+    limit,
+    nodeCount,
+    remaining,
+    resetAt
+  },
+  organization(login:"SoapBox"){
+    repositories(first: 20, orderBy:{field:PUSHED_AT, direction:DESC}) {
+      nodes {
+        id,
+        pullRequests(first:50, orderBy:{field:UPDATED_AT, direction:DESC}, states:OPEN) {
+          nodes {
+            id,
+            timeline(last:100, since:$after) {
+              nodes {
+                __typename,
+                ... on ReviewRequestedEvent {
+                  id,
+                  subject {
+                    id
+                  },
+                  createdAt
+                },
+                ... on ReviewRequestRemovedEvent {
+                  id,
+                  subject {
+                    id
+                  },
+                  createdAt
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

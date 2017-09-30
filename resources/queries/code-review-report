@@ -1,0 +1,49 @@
+{
+  rateLimit {
+    cost
+    limit
+    nodeCount
+    remaining
+    resetAt
+  }
+  organization(login:"SoapBox"){
+    members(last:100) {
+      nodes {
+        id,
+        name,
+        login
+      }
+    },
+    repositories(first: 20, orderBy:{field:PUSHED_AT, direction:DESC}) {
+      nodes {
+        name
+        pullRequests(first:50, orderBy:{field:UPDATED_AT, direction:DESC}, states:OPEN) {
+          nodes {
+            id,
+            url,
+            title,
+            author {
+              login
+            },
+            reviewRequests(last:10) {
+              nodes {
+                reviewer {
+                  login
+                }
+              }
+            },
+            reviews(states:[APPROVED, CHANGES_REQUESTED, DISMISSED], last:10) {
+              nodes {
+                state,
+                submittedAt,
+                author {
+                  login
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

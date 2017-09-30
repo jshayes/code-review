@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\CodeReviewReport::class,
+        \App\Console\Commands\ReviewRequestTimestamps::class,
     ];
 
     /**
@@ -28,6 +29,9 @@ class Kernel extends ConsoleKernel
             ->weekdays()
             ->timezone('America/Toronto')
             ->dailyAt('08:30');
+
+        $schedule->command('code-review:update-timestamps --minutes 5')
+            ->everyFiveMinutes();
     }
 
     /**

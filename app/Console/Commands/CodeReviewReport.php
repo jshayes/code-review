@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\User;
+use Exception;
 use App\Report;
 use Carbon\Carbon;
 use App\GithubUser;
@@ -12,6 +13,8 @@ use App\GitHub\Organization;
 use Illuminate\Console\Command;
 use App\Notifications\CodeReview;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use App\GitHub\Queries\CodeReviewReportQuery;
 
 class CodeReviewReport extends Command
 {
@@ -60,36 +63,30 @@ class CodeReviewReport extends Command
      */
     public function handle()
     {
-        $time = Carbon::now()->subMonth(2)->startOfDay();
-        $lastRanAt = Carbon::now()->previousWeekday();
-        $client = new Client();
-        $pager = new ResultPager($client);
+        try {
+            $this->call('code-review:update-timestamps', ['minutes' => 5]);
+        } catch (Exception $e) {
+            Log::error($e);
+        }
 
         $report = new Report();
-        $organization = new Organization('SoapBox');
+        $client = new Client();
+        $response = $client->api('graphql')->execute((string) new CodeReviewReportQuery());
 
-        $organization->getRepositories()->filter(function ($repository) use ($time) {
-            return $time->lte($repository->getPushedAt());
-        })->each(function ($repository) use ($report, $lastRanAt) {
-            $repository->getOpenPullRequests()
-                ->each(function ($pullRequest) use ($report, $lastRanAt) {
-                    $requestedReviews = $pullRequest->getRequestedReviews();
+        $org = new Organization($response['data']['organization']);
+        foreach ($org->getRepositories() as $repo) {
+            foreach ($repo->getPullRequests() as $pr) {
+                foreach ($pr->getReviewRequests() as $request) {
+                    $report->addRequestedReview($request);
+                }
 
-                    if (!$requestedReviews->isEmpty()) {
-                        $requestedReviews->each(function ($requestedReviews) use ($report) {
-                            $report->addRequestedReview($requestedReviews);
-                        });
-                    } else if ($lastRanAt->lte($pullRequest->getUpdatedAt())) {
-                        $latestReview = $pullRequest->getReviews()->filter(function ($review) use ($lastRanAt) {
-                            return !in_array($review->getState(), ['PENDING', 'COMMENT']) && $lastRanAt->lte($review->getSubmittedAt());
-                        })->last();
-
-                        if (!is_null($latestReview)) {
-                            $report->addReview($latestReview);
-                        }
+                if (!$pr->hasReviewRequests()) {
+                    foreach ($pr->getReviews() as $review) {
+                        $report->addReview($review);
                     }
-                });
-        });
+                }
+            }
+        }
 
         $user = new User();
         $user->email = env('REPORT_EMAIL');

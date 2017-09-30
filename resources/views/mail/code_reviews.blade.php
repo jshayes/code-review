@@ -4,7 +4,7 @@
 @foreach($data['requested_reviews'] as $review)
 ### Code reviews assigned to {{ $review['reviewer_name'] }}
 @foreach($review['pull_requests'] as $pullRequest)
-- **{{ $pullRequest['author_name'] }}** assigned [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }}
+- **{{ $pullRequest['author_name'] }}** assigned [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }} {{ $pullRequest['days'] }}
 @endforeach
 
 @endforeach

@@ -12,7 +12,8 @@ class Review
     public function __construct(PullRequest $pullRequest, array $data)
     {
         $this->pullRequest = $pullRequest;
-        $this->data = $data;
+        $this->state = $data['state'];
+        $this->author = $this->getOrganization()->getMember($data['author']['login']);
     }
 
     public function getPullRequest(): PullRequest
@@ -20,14 +21,19 @@ class Review
         return $this->pullRequest;
     }
 
-    public function getReviewer(): User
+    public function getOrganization(): Organization
     {
-        return new User($this->data['user']);
+        return $this->getPullRequest()->getOrganization();
+    }
+
+    public function getAuthor(): User
+    {
+        return $this->author;
     }
 
     public function getState(): string
     {
-        return $this->data['state'];
+        return $this->state;
     }
 
     public function getStateString(): string
@@ -45,10 +51,5 @@ class Review
                 return 'reviewed';
                 break;
         }
-    }
-
-    public function getSubmittedAt(): Carbon
-    {
-        return Carbon::parse($this->data['submitted_at']);
     }
 }

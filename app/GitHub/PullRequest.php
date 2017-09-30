@@ -8,13 +8,30 @@ use Illuminate\Support\Collection;
 
 class PullRequest
 {
-    private $repository;
-    private $data;
-
     public function __construct(Repository $repository, array $data)
     {
         $this->repository = $repository;
-        $this->data = $data;
+        $this->id = $data['id'];
+        $this->title = $data['title'];
+        $this->url = $data['url'];
+        $this->author = $this->getOrganization()->getMember($data['author']['login']);
+        $this->reviewRequests = collect();
+        $this->reviews = collect();
+
+        foreach ($data['reviewRequests']['nodes'] as $reviewRequest) {
+            $this->reviewRequests->push(new RequestedReview($this, $reviewRequest));
+        }
+
+        $reviews = collect($data['reviews']['nodes'])->mapWithKeys(function ($review) {
+            return [$review['author']['login'] => $review];
+        })->filter(function ($review) {
+            return Carbon::parse($review['submittedAt'])->gte(Carbon::now()->previousWeekday());
+        })->sortBy(function ($review) {
+            return Carbon::parse($review['submittedAt']);
+        });
+        foreach ($reviews as $review) {
+            $this->reviews->push(new Review($this, $review));
+        }
     }
 
     public function getRepository(): Repository
@@ -22,71 +39,43 @@ class PullRequest
         return $this->repository;
     }
 
-    public function getNumber(): int
+    public function getOrganization(): Organization
     {
-        return (int) $this->data['number'];
+        return $this->getRepository()->getOrganization();
     }
 
-    public function getAuthor(): User
+    public function getId(): string
     {
-        return new User($this->data['user']);
+        return $this->id;
     }
 
     public function getTitle(): string
     {
-        return $this->data['title'];
+        return $this->title;
     }
 
     public function getUrl(): string
     {
-        return $this->data['html_url'];
+        return $this->url;
     }
 
-    public function getUpdatedAt(): Carbon
+    public function getAuthor(): User
     {
-        return Carbon::parse($this->data['updated_at']);
+        return $this->author;
     }
 
-    public function getRequestedReviews(): Collection
+    public function getReviewRequests(): Collection
     {
-        $reviewers = [];
-        if (array_key_exists('requested_reviewers', $this->data)) {
-            $reviewers = $this->data['requested_reviewers'];
-        } else {
-            $client = new Client();
-            $pager = new ResultPager($client);
-            $reviewers = $pager->fetchAll(
-                $client->api('pull_request')->reviewRequests()->configure(),
-                'all',
-                [
-                    $this->repository->getOrganization()->getName(),
-                    $this->repository->getName(),
-                    $this->getNumber(),
-                ]
-            );
-        }
+        return $this->reviewRequests;
+    }
 
-        return (new Collection($reviewers))->map(function ($user) {
-            return new RequestedReview($this, new User($user));
-        });
+    public function hasReviewRequests(): bool
+    {
+        return $this->reviewRequests->isNotEmpty();
     }
 
     public function getReviews(): Collection
     {
-        $client = new Client();
-        $pager = new ResultPager($client);
-        return (new Collection(
-            $pager->fetchAll(
-                $client->api('pull_request')->reviews()->configure(),
-                'all',
-                [
-                    $this->repository->getOrganization()->getName(),
-                    $this->repository->getName(),
-                    $this->getNumber(),
-                ]
-            )
-        ))->map(function ($review) {
-            return new Review($this, $review);
-        });
+        return $this->reviews;
     }
 }

@@ -8,13 +8,15 @@ use Illuminate\Support\Collection;
 
 class Repository
 {
-    private $organization;
-    private $data;
-
     public function __construct(Organization $organization, array $data)
     {
         $this->organization = $organization;
-        $this->data = $data;
+        $this->name = $data['name'];
+        $this->pullRequests = collect();
+
+        foreach ($data['pullRequests']['nodes'] as $pullRequest) {
+            $this->pullRequests->push(new PullRequest($this, $pullRequest));
+        }
     }
 
     public function getOrganization(): Organization
@@ -24,31 +26,11 @@ class Repository
 
     public function getName(): string
     {
-        return $this->data['name'];
+        return $this->name;
     }
 
-    public function getPushedAt(): Carbon
+    public function getPullRequests(): Collection
     {
-        return Carbon::parse($this->data['pushed_at']);
-    }
-
-    public function getOpenPullRequests(): Collection
-    {
-        $client = new Client();
-        $pager = new ResultPager($client);
-
-        return (new Collection(
-            $pager->fetchAll(
-                $client->api('pull_request'),
-                'all',
-                [
-                    $this->organization->getName(),
-                    $this->getName(),
-                    ['state' => 'open'],
-                ]
-            )
-        ))->map(function ($pullRequest) {
-            return new PullRequest($this, $pullRequest);
-        });
+        return $this->pullRequests;
     }
 }

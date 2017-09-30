@@ -7,27 +7,28 @@ use Illuminate\Support\Collection;
 
 class Organization
 {
-    private $organization;
-
-    public function __construct(string $organization)
+    public function __construct(array $data)
     {
-        $this->organization = $organization;
-    }
+        $this->members = collect();
+        $this->repositories = collect();
 
-    public function getName(): string
-    {
-        return $this->organization;
+        foreach ($data['members']['nodes'] as $member) {
+            $member = new User($member);
+            $this->members->put($member->getLogin(), $member);
+        }
+
+        foreach ($data['repositories']['nodes'] as $repository) {
+            $this->repositories->push(new Repository($this, $repository));
+        }
     }
 
     public function getRepositories(): Collection
     {
-        $client = new Client();
-        $pager = new ResultPager($client);
+        return $this->repositories;
+    }
 
-        return (new Collection(
-            $pager->fetchAll($client->api('repo'), 'org', [$this->organization])
-        ))->map(function ($repository) {
-            return new Repository($this, $repository);
-        });
+    public function getMember(string $login): User
+    {
+        return $this->members->get($login, new User(['login' => $login]));
     }
 }
