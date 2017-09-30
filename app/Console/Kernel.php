@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
             ->timezone('America/Toronto')
             ->dailyAt('08:30');
 
-        $schedule->command('code-review:update-timestamps --minutes 5')
+        $schedule->command('code-review:update-timestamps 5')
             ->everyFiveMinutes();
     }
 
