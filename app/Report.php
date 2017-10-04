@@ -5,6 +5,7 @@ namespace App;
 use Carbon\Carbon;
 use App\GitHub\Review;
 use Illuminate\Support\Str;
+use App\GitHub\Organization;
 use App\GitHub\RequestedReview;
 use Illuminate\Support\Collection;
 use App\GitHub\UserNameTransformer;
@@ -15,10 +16,23 @@ class Report
     private $requestedReviews;
     private $reviews;
 
-    public function __construct()
+    public function __construct(Organization $org)
     {
         $this->requestedReviews = new Collection();
         $this->reviews = new Collection();
+        $this->reviewedPrs = new Collection();
+
+        foreach ($org->getRepositories() as $repo) {
+            foreach ($repo->getPullRequests() as $pr) {
+                foreach ($pr->getReviewRequests() as $request) {
+                    $this->addRequestedReview($request);
+                }
+
+                if (!$pr->hasReviewRequests() && $pr->hasReviews() && $pr->getReviewState()) {
+                    $this->reviewedPrs->push($pr);
+                }
+            }
+        }
     }
 
     public function addRequestedReview(RequestedReview $requestedReview)
@@ -63,26 +77,22 @@ class Report
                         })
                     ];
                 }),
-            'reviews' => $this->reviews
-                ->sortBy(function ($review) {
-                    return $review->getAuthor()->getName();
+            'reviews' => $this->reviewedPrs
+                ->groupBy(function ($pr) {
+                    return $pr->getAuthor()->getName();
                 })
-                ->groupBy(function ($review) {
-                    return $review->getPullRequest()->getAuthor()->getName();
+                ->sortBy(function ($prs) {
+                    return $prs->first()->getAuthor()->getName();
                 })
-                ->sortBy(function ($review) {
-                    return $review->first()->getPullRequest()->getAuthor()->getName();
-                })
-                ->map(function ($reviews, $login) {
+                ->map(function ($prs, $login) {
                     return [
-                        'author_name' => $reviews->first()->getPullRequest()->getAuthor()->getName(),
-                        'pull_requests' => $reviews->map(function ($review) {
+                        'author_name' => $prs->first()->getAuthor()->getName(),
+                        'pull_requests' => $prs->map(function ($pr) {
                             return [
-                                'reviewer_name' => $review->getAuthor()->getName(),
-                                'status' => $review->getStateString(),
-                                'title' => $review->getPullRequest()->getTitle(),
-                                'url' => $review->getPullRequest()->getUrl(),
-                                'repository_name' => $review->getPullRequest()->getRepository()->getName(),
+                                'state' => $pr->getReviewState(),
+                                'title' => $pr->getTitle(),
+                                'url' => $pr->getUrl(),
+                                'repository_name' => $pr->getRepository()->getName(),
                             ];
                         }),
                     ];

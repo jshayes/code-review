@@ -69,24 +69,11 @@ class CodeReviewReport extends Command
             Log::error($e);
         }
 
-        $report = new Report();
         $client = new Client();
         $response = $client->api('graphql')->execute((string) new CodeReviewReportQuery());
 
         $org = new Organization($response['data']['organization']);
-        foreach ($org->getRepositories() as $repo) {
-            foreach ($repo->getPullRequests() as $pr) {
-                foreach ($pr->getReviewRequests() as $request) {
-                    $report->addRequestedReview($request);
-                }
-
-                if (!$pr->hasReviewRequests()) {
-                    foreach ($pr->getReviews() as $review) {
-                        $report->addReview($review);
-                    }
-                }
-            }
-        }
+        $report = new Report($org);
 
         $user = new User();
         $user->email = env('REPORT_EMAIL');

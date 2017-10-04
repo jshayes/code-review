@@ -22,14 +22,7 @@ class PullRequest
             $this->reviewRequests->push(new RequestedReview($this, $reviewRequest));
         }
 
-        $reviews = collect($data['reviews']['nodes'])->mapWithKeys(function ($review) {
-            return [$review['author']['login'] => $review];
-        })->filter(function ($review) {
-            return Carbon::parse($review['submittedAt'])->gte(Carbon::now()->previousWeekday());
-        })->sortBy(function ($review) {
-            return Carbon::parse($review['submittedAt']);
-        });
-        foreach ($reviews as $review) {
+        foreach ($data['reviews']['nodes'] as $review) {
             $this->reviews->push(new Review($this, $review));
         }
     }
@@ -74,8 +67,23 @@ class PullRequest
         return $this->reviewRequests->isNotEmpty();
     }
 
-    public function getReviews(): Collection
+    public function hasReviews(): bool
     {
-        return $this->reviews;
+        return $this->reviews->isNotEmpty();
+    }
+
+    public function getReviewState(): ?string
+    {
+        $reviews = $this->reviews->mapWithKeys(function ($review) {
+            return [$review->getAuthor()->getLogin() => $review->getState()];
+        });
+
+        if ($reviews->contains('CHANGES_REQUESTED')) {
+            return 'CHANGES_REQUESTED';
+        } else if ($reviews->contains('APPROVED')) {
+            return 'APPROVED';
+        }
+
+        return null;
     }
 }

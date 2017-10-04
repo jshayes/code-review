@@ -1,10 +1,10 @@
 @component('mail::message')
-# Requested Code Reviews
+# Outstanding Reviews
 @if(!empty($data['requested_reviews']))
 @foreach($data['requested_reviews'] as $review)
-### Code reviews assigned to {{ $review['reviewer_name'] }}
+### Assigned to {{ $review['reviewer_name'] }}
 @foreach($review['pull_requests'] as $pullRequest)
-- **{{ $pullRequest['author_name'] }}** assigned [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }} {{ $pullRequest['days'] }}
+- [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }} {{ $pullRequest['days'] }}
 @endforeach
 
 @endforeach
@@ -16,12 +16,16 @@ Looks like there is nothing assigned for code review today.
 ---
 
 <br />
-# Reviewed Pull Requests
+# Completed Reviews
 @if(!empty($data['reviews']))
 @foreach($data['reviews'] as $review)
-### Code reviews on PRs created by {{ $review['author_name'] }}
+### {{ $review['author_name'] }}'s PRs
 @foreach($review['pull_requests'] as $pullRequest)
-- **{{ $pullRequest['reviewer_name'] }}** {{ $pullRequest['status'] }} [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }}
+@if($pullRequest['state'] === 'APPROVED')
+- ✅ [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }}
+@else
+- ❌ [{{ $pullRequest['title'] }}]({{ $pullRequest['url'] }}) on {{ $pullRequest['repository_name'] }}
+@endif
 @endforeach
 
 @endforeach

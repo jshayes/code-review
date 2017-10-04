@@ -35,21 +35,4 @@ class Review
     {
         return $this->state;
     }
-
-    public function getStateString(): string
-    {
-        switch ($this->getState()) {
-            case 'APPROVED':
-                return 'approved';
-                break;
-
-            case 'CHANGES_REQUESTED':
-                return 'requested changes to';
-                break;
-
-            default:
-                return 'reviewed';
-                break;
-        }
-    }
 }
