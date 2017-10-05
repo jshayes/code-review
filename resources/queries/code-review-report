@@ -11,7 +11,8 @@
       nodes {
         id,
         name,
-        login
+        login,
+        avatarUrl
       }
     },
     repositories(first: 20, orderBy:{field:PUSHED_AT, direction:DESC}) {

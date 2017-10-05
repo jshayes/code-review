@@ -68,7 +68,7 @@ class Report
                             }
                             $pullRequest = $requestedReview->getPullRequest();
                             return [
-                                'author_name' => $pullRequest->getAuthor()->getName(),
+                                'avatar' => $pullRequest->getAuthor()->getAvatar(),
                                 'title' => $pullRequest->getTitle(),
                                 'url' => $pullRequest->getUrl(),
                                 'repository_name' => $pullRequest->getRepository()->getName(),

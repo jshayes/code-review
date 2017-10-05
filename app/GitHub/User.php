@@ -8,6 +8,7 @@ class User
     {
         $this->id = $data['id'] ?? null;
         $this->login = $data['login'];
+        $this->avatar = $data['avatarUrl'] ?? '';
         $this->name = $data['name'] ?? null ?: $this->login;
     }
 
@@ -24,5 +25,10 @@ class User
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getAvatar(): string
+    {
+        return $this->avatar;
     }
 }
