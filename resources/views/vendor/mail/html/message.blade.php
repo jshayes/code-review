@@ -21,7 +21,7 @@
     {{-- Footer --}}
     @slot('footer')
         @component('mail::footer')
-            {{ \Illuminate\Foundation\Inspiring::quote() }}
+            <p style="margin: 0">{{ \Illuminate\Foundation\Inspiring::quote() }}</p>
         @endcomponent
     @endslot
 @endcomponent
