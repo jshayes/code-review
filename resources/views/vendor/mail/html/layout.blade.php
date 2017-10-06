@@ -23,7 +23,7 @@
         }
     </style>
 
-    <table class="wrapper" width="100%" cellpadding="0" cellspacing="0">
+    <table class="wrapper" width="100%" cellpadding="0" cellspacing="0" style="padding: 15px 5% 0px 5%">
         <tr>
             <td align="center">
                 <table class="content" width="100%" cellpadding="0" cellspacing="0">
@@ -31,7 +31,7 @@
 
                     <!-- Email Body -->
                     <tr>
-                        <td class="body" width="100%" cellpadding="0" cellspacing="0">
+                        <td class="body" width="100%" cellpadding="0" cellspacing="0" style="border-radius: 5px;">
                             <table class="inner-body" align="center" width="770" cellpadding="0" cellspacing="0">
                                 <!-- Body content -->
                                 <tr>
