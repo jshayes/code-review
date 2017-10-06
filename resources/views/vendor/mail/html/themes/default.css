@@ -99,10 +99,14 @@ img {
 .header {
     padding: 25px 0;
     text-align: center;
+    background: -webkit-linear-gradient(left, #3A1C71, #D76D77, #FFAF7B);
+    background: -o-linear-gradient(right, #3A1C71, #D76D77, #FFAF7B);
+    background: -moz-linear-gradient(right, #3A1C71, #D76D77, #FFAF7B);
+    background: linear-gradient(to right, #3A1C71, #D76D77, #FFAF7B)
 }
 
 .header a {
-    color: #bbbfc3;
+    color: #fff;
     font-size: 19px;
     font-weight: bold;
     text-decoration: none;

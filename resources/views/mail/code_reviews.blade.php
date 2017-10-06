@@ -4,8 +4,7 @@
 @foreach($data['requested_reviews'] as $review)
 ### Assigned to {{ $review['reviewer_name'] }}
 @foreach($review['pull_requests'] as $pullRequest)
-
-- <div><img src="{{ $pullRequest['avatar'] }}" style="width: 16px; height: 16px; margin-right: 4px; vertical-align: middle; display: inline-block;"/> <div style="height: 16px; vertical-align: middle; display: inline-block;"><a href="{{ $pullRequest['url'] }}">{{ $pullRequest['title'] }}</a> on {{ $pullRequest['repository_name'] }} {{ $pullRequest['days'] }}</div></div>
+- <div><img src="{{ $pullRequest['avatar'] }}" style="width: 16px; height: 16px; margin-right: 4px; vertical-align: middle; display: inline-block;"/><div style="height: 100%; vertical-align: middle; display: inline-block;"><a href="{{ $pullRequest['url'] }}">{{ $pullRequest['title'] }}</a> on {{ $pullRequest['repository_name'] }} {{ $pullRequest['days'] }}</div></div>
 @endforeach
 
 @endforeach
