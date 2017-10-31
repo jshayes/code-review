@@ -19,7 +19,7 @@ class PullRequest
         $this->reviews = collect();
 
         foreach ($data['reviewRequests']['nodes'] as $reviewRequest) {
-            if (!is_null($reviewRequest)) {
+            if (isset($reviewRequest['reviewer']['login'])) {
                 $this->reviewRequests->push(new RequestedReview($this, $reviewRequest));
             }
         }
