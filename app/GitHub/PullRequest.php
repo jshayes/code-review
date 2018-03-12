@@ -14,12 +14,12 @@ class PullRequest
         $this->id = $data['id'];
         $this->title = $data['title'];
         $this->url = $data['url'];
-        $this->author = $this->getOrganization()->getMember($data['author']['login']);
+        $this->author = new User($data['author']);
         $this->reviewRequests = collect();
         $this->reviews = collect();
 
         foreach ($data['reviewRequests']['nodes'] as $reviewRequest) {
-            if (isset($reviewRequest['reviewer']['login'])) {
+            if (isset($reviewRequest['requestedReviewer']['login'])) {
                 $this->reviewRequests->push(new RequestedReview($this, $reviewRequest));
             }
         }

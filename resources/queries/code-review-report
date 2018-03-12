@@ -6,39 +6,55 @@
     remaining
     resetAt
   }
-  organization(login:"SoapBox"){
-    members(last:100) {
+  organization(login: "SoapBox") {
+    members(last: 100) {
       nodes {
-        id,
-        name,
-        login,
+        id
+        name
+        login
         avatarUrl
       }
-    },
-    repositories(first: 20, orderBy:{field:PUSHED_AT, direction:DESC}) {
+    }
+    repositories(first: 20, orderBy: {field: PUSHED_AT, direction: DESC}) {
       nodes {
         name
-        pullRequests(first:50, orderBy:{field:UPDATED_AT, direction:DESC}, states:OPEN) {
+        pullRequests(first: 50, orderBy: {field: UPDATED_AT, direction: DESC}, states: OPEN) {
           nodes {
-            id,
-            url,
-            title,
+            id
+            url
+            title
             author {
               login
-            },
-            reviewRequests(last:10) {
+              avatarUrl
+              ... on User {
+                id
+                name
+              }
+            }
+            reviewRequests(last: 10) {
               nodes {
-                reviewer {
-                  login
+                requestedReviewer {
+                  __typename
+                  ... on User {
+                    id
+                    login
+                    name
+                    avatarUrl
+                  }
                 }
               }
-            },
-            reviews(states:[APPROVED, CHANGES_REQUESTED, DISMISSED], last:10) {
+            }
+            reviews(states: [APPROVED, CHANGES_REQUESTED, DISMISSED], last: 10) {
               nodes {
-                state,
-                submittedAt,
+                state
+                submittedAt
                 author {
                   login
+                  avatarUrl
+                  ... on User {
+                    name
+                    id
+                  }
                 }
               }
             }

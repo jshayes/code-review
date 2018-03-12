@@ -10,7 +10,7 @@ class RequestedReview
     public function __construct(PullRequest $pullRequest, array $data)
     {
         $this->pullRequest = $pullRequest;
-        $this->reviewer = $this->getOrganization()->getMember($data['reviewer']['login']);
+        $this->reviewer = new User($data['requestedReviewer']);
     }
 
     public function getPullRequest(): PullRequest

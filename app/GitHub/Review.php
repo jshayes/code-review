@@ -13,7 +13,7 @@ class Review
     {
         $this->pullRequest = $pullRequest;
         $this->state = $data['state'];
-        $this->author = $this->getOrganization()->getMember($data['author']['login']);
+        $this->author = new User($data['author']);
     }
 
     public function getPullRequest(): PullRequest
