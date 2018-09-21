@@ -2,17 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\User;
-use App\Report;
 use Carbon\Carbon;
-use App\GithubUser;
 use App\GitHub\Client;
-use Github\ResultPager;
 use App\RequestedReview;
-use App\GitHub\Organization;
 use Illuminate\Console\Command;
-use App\Notifications\CodeReview;
-use Illuminate\Support\Collection;
 use App\GitHub\Queries\ReviewRequestTimestampsQuery;
 
 class ReviewRequestTimestamps extends Command
@@ -63,10 +56,14 @@ class ReviewRequestTimestamps extends Command
         });
 
         foreach ($events as $event) {
+            if (!($event['requestedReviewer']['id'] ?? null)) {
+                continue;
+            }
+
             if ($event['__typename'] == 'ReviewRequestedEvent') {
                 $model = RequestedReview::firstOrCreate(
-                    ['pull_request_id' => $event['pr_id'], 'reviewer_id' => $event['subject']['id']],
-                    ['pull_request_id' => $event['pr_id'], 'reviewer_id' => $event['subject']['id'], 'requested_at' => Carbon::parse($event['createdAt'])]
+                    ['pull_request_id' => $event['pr_id'], 'reviewer_id' => $event['requestedReviewer']['id']],
+                    ['pull_request_id' => $event['pr_id'], 'reviewer_id' => $event['requestedReviewer']['id'], 'requested_at' => Carbon::parse($event['createdAt'])]
                 );
                 $createdAt = Carbon::parse($event['createdAt']);
                 if ($createdAt->gt($model->requested_at)) {
@@ -75,7 +72,7 @@ class ReviewRequestTimestamps extends Command
                 }
             } elseif ($event['__typename'] == 'ReviewRequestRemovedEvent') {
                 $model = RequestedReview::where('pull_request_id', $event['pr_id'])
-                    ->where('reviewer_id', $event['subject']['id'])
+                    ->where('reviewer_id', $event['requestedReviewer']['id'])
                     ->first();
 
                 if (!is_null($model) && Carbon::parse($event['createdAt'])->gte($model->requested_at)) {

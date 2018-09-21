@@ -18,16 +18,20 @@ query($after:DateTime){
                 __typename,
                 ... on ReviewRequestedEvent {
                   id,
-                  subject {
-                    id
-                  },
+                  requestedReviewer {
+                    ... on User {
+                      id
+                    }
+                  }
                   createdAt
                 },
                 ... on ReviewRequestRemovedEvent {
                   id,
-                  subject {
-                    id
-                  },
+                  requestedReviewer {
+                    ... on User {
+                      id
+                    }
+                  }
                   createdAt
                 }
               }
