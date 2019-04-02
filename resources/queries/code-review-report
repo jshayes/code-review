@@ -7,7 +7,7 @@
     resetAt
   }
   organization(login: "SoapBox") {
-    members(last: 100) {
+    membersWithRole(last: 100) {
       nodes {
         id
         name
