@@ -12,7 +12,7 @@ class Organization
         $this->members = collect();
         $this->repositories = collect();
 
-        foreach ($data['members']['nodes'] as $member) {
+        foreach ($data['membersWithRole']['nodes'] as $member) {
             $member = new User($member);
             $this->members->put($member->getLogin(), $member);
         }
